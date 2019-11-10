@@ -34,9 +34,12 @@ print("Here is a list of existing message boards:\n")
 
 
 
-#print("Please select an option:")
-
 boardList = pickle.loads(clientSocket.recv(1024))
+
+#IF LIST NOT EMPTY!!!!
 print ('Boards: ', boardList)
 
+
+
+#print("Please select an option:")
 clientSocket.close()

@@ -8,9 +8,8 @@ def makeBoardList():
     rawList = [b for b in path.iterdir() if b.is_dir()]
     boardList = []
     for i in range(0,len(rawList)):
-        name = str(rawList[0]).split("\\")[-1] # WON'T WORK ON LINUX DUE TO \\
-        name.replace("_"," ")
-        print(name)
+        name = str(rawList[i]).split("\\")[-1] # WON'T WORK ON LINUX DUE TO \\
+        name = name.replace("_"," ")
         boardList.append(name)
     return boardList
 
