@@ -28,18 +28,23 @@ clientSocket.connect((serverHost, serverPort))
 print("Connection to host:", serverHost, "port:", serverPort, "succesful!\n")
 
 # Welcome messages
-print("---Welcome to MsgBrd!---")
-print("Here is a list of existing message boards:\n")
+print("---Welcome to MsgBrd!---\n")
 
+### IMPLEMENT GET_BOARDS!!!!!!!!!!!!!
 
-
-
+# Receives list of boards, prints its contents
 boardList = pickle.loads(clientSocket.recv(1024))
+if not boardList:
+    print("There are no message boards, and thus nothing to do.")
+    sys.exit()
+else:
+    print("Board list received succesfully. Here is a list of existing message boards:\n")
+    for i in range(0,len(boardList)):
+        print (" ",i+1,":",boardList[i])
 
-#IF LIST NOT EMPTY!!!!
-print ('Boards: ', boardList)
-
-
-
-#print("Please select an option:")
+print("\nPlease select an option:")
+print(" -Enter a number between 1 and",len(boardList),"to view the corresponding board's 100 most recent messages.")
+print(" -Enter POST to post a message to a board.")
+print(" -Enter QUIT to quit the client.")
+        
 clientSocket.close()

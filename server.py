@@ -8,13 +8,16 @@ def makeBoardList():
     rawList = [b for b in path.iterdir() if b.is_dir()]
     boardList = []
     for i in range(0,len(rawList)):
-        name = str(rawList[i]).split("\\")[-1] # WON'T WORK ON LINUX DUE TO \\
-        name = name.replace("_"," ")
+        #name = str(rawList[i])
+        # Deals with Windows pathnames by converting them to UNIX style
+        name = str(rawList[i]).replace("\\","/").split("/")[-1].replace("_"," ")
+        #name = name.split("/")[-1]
+        #name = name.replace("_"," ") # Gets rid of underscores, should any exist
         boardList.append(name)
     return boardList
 
 # Determines whether server was invoked with some input arguments after server.py
-# If not, sets IP and port to default values (same defaults as server.py)
+# If not, sets IP and port to default values (same defaults as client.py)
 if len(sys.argv) == 1:
     serverHost = '127.0.0.1'
     serverPort = 12000
