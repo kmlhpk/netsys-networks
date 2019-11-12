@@ -3,18 +3,21 @@ import sys
 import pathlib
 import pickle
 
+# FUNCTION DEFINITIONS
+
+# Mkaes a list of the board folders within ./board for client to display
 def makeBoardList():
     path = pathlib.Path("./board")
+    # Fills list of full pathnames
     rawList = [b for b in path.iterdir() if b.is_dir()]
     boardList = []
     for i in range(0,len(rawList)):
-        #name = str(rawList[i])
-        # Deals with Windows pathnames by converting them to UNIX style
+        # Extracts the name of the subfolder from full pathname and removes its underscores. Should be OS-agnostic re: slashes.
         name = str(rawList[i]).replace("\\","/").split("/")[-1].replace("_"," ")
-        #name = name.split("/")[-1]
-        #name = name.replace("_"," ") # Gets rid of underscores, should any exist
         boardList.append(name)
     return boardList
+
+# MAIN PROGRAM
 
 # Determines whether server was invoked with some input arguments after server.py
 # If not, sets IP and port to default values (same defaults as client.py)
