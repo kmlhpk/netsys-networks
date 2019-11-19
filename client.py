@@ -43,12 +43,12 @@ def sendMessage(board,title,msg):
 if len(sys.argv) == 1:
     serverHost = '127.0.0.1'
     serverPort = 12000
-    print("Attempting to connect to default host:", serverHost, "default port:", serverPort)
+    print("Using default host:", serverHost, "default port:", serverPort,"\n")
 # If two arguments were provided, sets serverHost to the first arg and serverPort to the second arg
 elif len(sys.argv) == 3 and type(sys.argv[2]) is int:
     serverHost = sys.argv[1]
     serverPort = sys.argv[2]
-    print("Attempting to connect to host:", serverHost, "port:", serverPort)
+    print("Using host:", serverHost, "port:", serverPort,"\n")
 # If only one, or three or more, input arguments were provided, returns an error message.
 else:
     print("ERROR: You have provided an incorrect amount of arguments, or used the wrong type of argument.")
@@ -77,12 +77,11 @@ while True:
     
     command = input()
     if command == "QUIT":
-        #    client = newSocket() and then request "QUIT"?
         client.close()
         sys.exit()
     elif command == "POST": #TRYCTACH INTEGERS
         board = input("Enter a number between 1 and "+str(len(boardList))+" to select a board to post your message to.\n")
-        title = input("Give your message a title.\n")
+        title = input("Give your message a title.\n").replace(" ","_")
         msg = input("Write your message.\n")
         sendMessage(board,title,msg)
     elif int(command) in range(1,len(boardList)+1): # TRYCATCH INTEGERS
@@ -90,15 +89,10 @@ while True:
         board = boardList[int(command)-1]
         print("\nThese are the last 100 messages in the board " + board + "\n")
         msgList = getMessages(board)
-        
-        # WHAT IF MESSAGE HAS INCORRECT TITLE???? HANDLE THIS ERROR! TRYCATCH STATEMENT??
-        
-        for i in range(0, len(msgList[0])):
-            fullTitle = msgList[0][i].split("-")
-            date, time, title = fullTitle[0], fullTitle[1], fullTitle[2]
-            print(" Date: "+date[0:4]+"-"+date[4:6]+"-"+date[6:]+" "+time[0:2]+":"+time[2:4]+":"+time[4:])
-            print(" Title: " + title.replace("_"," "))
+        for i in range(0,len(msgList[0])):
             print("   " + msgList[1][i]+"\n")
+        
+
         
         
         
