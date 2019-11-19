@@ -6,21 +6,22 @@ import pickle
 ### FUNCTION DEFINITIONS ###
 
 def makeBoardList():
-    path = pathlib.Path("./board")
+    path = pathlib.Path.cwd() / "board"
     boardPaths = [b for b in path.iterdir() if b.is_dir()]
     boardList = []
     for i in range(0,len(boardPaths)):
-        name = str(boardPaths[i]).replace("\\","/").split("/")[-1].replace("_"," ")
-        boardList.append(name)
+        #name = str(boardPaths[i]).replace("\\","/").split("/")[-1].replace("_"," ")  # OLD METHOD
+        boardList.append(boardPaths[i].name)
     return boardList
 
 def makeMsgList(board):
     path = pathlib.Path.cwd() / "board" / board
-    msgPaths = [m for m in path.iterdir() if m.is_file()]
+    msgPaths = [m for m in path.iterdir() if m.is_file()]  # SORT THESE BY DATE SOMEHOW!
     msgList = [[],[]]
     for i in range(0,len(msgPaths)):
         with open(msgPaths[i],"r") as f:
             msgList[1].append(f.read())
+            msgList[0].append(msgPaths[i].stem)
     return msgList
 
 ### MAIN EXECUTABLE CODE ###
@@ -51,11 +52,12 @@ server.bind((serverHost, serverPort))
 server.listen() # Provide listen() with an integer argument to limit the amount of concurrent connections
 print("The server is listening for client connections on host:", serverHost, "port:", serverPort)
 
+# IF CLIENT CRASHES/QUITS, MAKE SURE TO CLOSE CONNECTION! OTHERWISE GET_BOARDS FROM NEW CLIENT GETS AN EOF ERROR
+
 while True:
     conn, addr = server.accept()
     print("Connection made with client:", addr)
     request = pickle.loads(conn.recv(1024))
-    print(request)
     if request[0] == "GET_BOARDS":
         print("Received a GET_BOARDS request") # MAKE SURE TO LOG THIS!!!
         boardList = pickle.dumps(makeBoardList())
@@ -66,5 +68,5 @@ while True:
         msgList = pickle.dumps(makeMsgList(request[1]))
         conn.send(msgList)
         conn.close()
-
+    #elif request[0] == "QUIT":
 

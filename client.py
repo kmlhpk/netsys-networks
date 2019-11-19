@@ -1,6 +1,7 @@
 import socket as skt
 import sys
 import pickle
+import time
 
 ### FUNCTION DEFINITIONS ###
 
@@ -28,6 +29,12 @@ def getMessages(board):
         print("There are no messages in this board, and thus nothing to display.")
     else:
         return msgList
+    
+def sendMessage(board,title,msg):
+    # timestamp
+    request = ["POST_MESSAGE",board,title,msg]
+    print(board +" "+ title + " " + msg)
+    return
     
 ### MAIN EXECUTABLE CODE
 
@@ -63,17 +70,42 @@ for i in range(0,len(boardList)):
     print (" ",i+1,":",boardList[i])
         
 while True:
-    client = newSocket()
     print("\nPlease select an option:")
-    print(" -Enter a number between 1 and",len(boardList),"to view the corresponding board's 100 most recent messages.")
+    print(" -Enter a number between 1 and "+str(len(boardList))+" to view the corresponding board's 100 most recent messages.")
     print(" -Enter POST to post a message to a board.")
     print(" -Enter QUIT to quit the client.")
     
     command = input()
     if command == "QUIT":
+        #    client = newSocket() and then request "QUIT"?
         client.close()
         sys.exit()
-    elif int(command) in range(1,len(boardList)+1):
-        board = boardList[int(command)-1].replace(" ","_")
+    elif command == "POST": #TRYCTACH INTEGERS
+        board = input("Enter a number between 1 and "+str(len(boardList))+" to select a board to post your message to.\n")
+        title = input("Give your message a title.\n")
+        msg = input("Write your message.\n")
+        sendMessage(board,title,msg)
+    elif int(command) in range(1,len(boardList)+1): # TRYCATCH INTEGERS
+        client = newSocket()
+        board = boardList[int(command)-1]
+        print("\nThese are the last 100 messages in the board " + board + "\n")
         msgList = getMessages(board)
-        print(msgList)
+        
+        # WHAT IF MESSAGE HAS INCORRECT TITLE???? HANDLE THIS ERROR! TRYCATCH STATEMENT??
+        
+        for i in range(0, len(msgList[0])):
+            fullTitle = msgList[0][i].split("-")
+            date, time, title = fullTitle[0], fullTitle[1], fullTitle[2]
+            print(" Date: "+date[0:4]+"-"+date[4:6]+"-"+date[6:]+" "+time[0:2]+":"+time[2:4]+":"+time[4:])
+            print(" Title: " + title.replace("_"," "))
+            print("   " + msgList[1][i]+"\n")
+        
+        
+        
+        
+
+        
+        
+        
+        
+        
