@@ -1,7 +1,7 @@
 import socket as skt
 import sys
 import pickle
-import time
+import datetime
 
 ### FUNCTION DEFINITIONS ###
 
@@ -25,18 +25,17 @@ def getMessages(board):
     request = ["GET_MESSAGES",board]
     client.send(pickle.dumps(request))
     msgList = pickle.loads(client.recv(1024))
-    if not msgList:
+    if not msgList[0]:
         print("There are no messages in this board, and thus nothing to display.")
-    else:
-        return msgList
+    return msgList
     
-def sendMessage(board,title,msg):
-    # timestamp
-    request = ["POST_MESSAGE",board,title,msg]
-    print(board +" "+ title + " " + msg)
+def sendMessage(board,date,title,msg):
+    filename = date +"-"+ title
+    request = ["POST_MESSAGE",board,filename,msg]
+    print(request)
     return
     
-### MAIN EXECUTABLE CODE
+### MAIN CODE ###
 
 # Determines whether client was invoked with some input arguments after client.py
 # If not, sets host and port to default values (same defaults as server.py)
@@ -58,7 +57,6 @@ else:
     print("Where serverHost is the IP or host you want to connect to (string or integer), and severPort is a port number (integer)")
     sys.exit()
 
-
 # Welcome message
 print("---Welcome to MsgBrd!---\n")
 # Creates a client socket and attempts to connect to server
@@ -79,20 +77,29 @@ while True:
     if command == "QUIT":
         client.close()
         sys.exit()
-    elif command == "POST": #TRYCTACH INTEGERS
-        board = input("Enter a number between 1 and "+str(len(boardList))+" to select a board to post your message to.\n")
-        title = input("Give your message a title.\n").replace(" ","_")
-        msg = input("Write your message.\n")
-        sendMessage(board,title,msg)
+    
+    elif command == "POST":
+        boardInt = input("Enter a number between 1 and "+str(len(boardList))+" to select a board to post your message to.\n")
+        try:
+            board = boardList[int(boardInt)-1]
+            title = input("Give your message a title.\n").replace(" ","_")
+            msg = input("Write your message.\n")
+            date = datetime.datetime.now()
+            date = date.strftime("%Y%m%d")+"-"+date.strftime("%H%M%S")
+            sendMessage(board,date,title,msg)
+        except:
+            print("Invalid board number - please try again.")
+    
     elif int(command) in range(1,len(boardList)+1): # TRYCATCH INTEGERS
         client = newSocket()
         board = boardList[int(command)-1]
-        print("\nThese are the last 100 messages in the board " + board + "\n")
         msgList = getMessages(board)
-        for i in range(0,len(msgList[0])):
-            print("Date:",msgList[0][i])
-            print("Title: "+msgList[1][i])
-            print("   " + msgList[2][i]+"\n")
+        if msgList[0]:
+            print("\nThese are the last 100 messages in the board " + board + "\n")
+            for i in range(0,len(msgList[0])):
+                print("Date:",msgList[0][i])
+                print("Title: "+msgList[1][i])
+                print("   " + msgList[2][i]+"\n")
         
         
         

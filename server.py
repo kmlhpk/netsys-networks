@@ -7,41 +7,52 @@ import datetime
 ### FUNCTION DEFINITIONS ###
 
 def makeBoardList():
+    # Makes a list of paths of all directories in ./board
     path = pathlib.Path.cwd() / "board"
     boardPaths = [b for b in path.iterdir() if b.is_dir()]
     boardList = []
     for i in range(0,len(boardPaths)):
+        # Makes board list from just the name of the final directory in each path
         boardList.append(boardPaths[i].name)
     return boardList
 
 def makeMsgList(board):
+    # Makes a list of paths of all files in ./board/<specified board>
     path = pathlib.Path.cwd() / "board" / board
-    msgPaths = [m for m in path.iterdir() if m.is_file()]  # SORT THESE BY DATE SOMEHOW!
-    msgList = [[],[],[]]
+    msgPaths = [m for m in path.iterdir() if m.is_file()] #      SORT THESE BY DATE SOMEHOW! ALSO ONLY 100!!
+    msgList = [[],[],[]] # [[dates][titles][messages]]
     for i in range(0,len(msgPaths)):
+        try:
+            # Checks is filename is formatted correctly (date-time-title)
+            fullTitle = msgPaths[i].stem.split("-")
+        except:
+            print("Message title has invalid format. Skipping message.")
+            continue
+        # Pulls message title, sans underscores, from filename
+        title = fullTitle[2].replace("_"," ")
+        try:
+            # Checks for YYYYMMDD-HHMMSS formatting by checking if they're valid integers
+            dateInt = [int(fullTitle[0][0:4]), int(fullTitle[0][4:6]), int(fullTitle[0][6:])]
+            timeInt = [int(fullTitle[1][0:2]), int(fullTitle[1][2:4]), int(fullTitle[1][4:])]
+        except:
+            print("Message title has invalid format. Skipping message.")
+            continue
+        # Makes a date object from the date+time data for easy displaying
+        date = datetime.datetime(dateInt[0],dateInt[1],dateInt[2],timeInt[0],timeInt[1],timeInt[2])
+        # Appends relevant data to appropriate sub-array
+        msgList[0].append(date)
+        msgList[1].append(title)
         with open(msgPaths[i],"r") as f:
-            try:
-                fullTitle = msgPaths[i].stem.split("-")
-            except:
-                print("Message title has invalid format. Skipping message.")
-                continue
-            title = fullTitle[2].replace("_"," ")
-            try:
-                dateInt = [int(fullTitle[0][0:4]), int(fullTitle[0][4:6]), int(fullTitle[0][6:])]
-                timeInt = [int(fullTitle[1][0:2]), int(fullTitle[1][2:4]), int(fullTitle[1][4:])]
-            except:
-                print("Message title has invalid format. Skipping message.")
-                continue
-            date = datetime.datetime(dateInt[0],dateInt[1],dateInt[2],timeInt[0],timeInt[1],timeInt[2])
-            msgList[0].append(date)
-            msgList[1].append(title)
             msgList[2].append(f.read())
     return msgList
 
-def makeMsg(board,title,msg):
+def makeMsg(board,filename,msg):
+    # WHAT HAPPENS IF FILENAME ALREADY EXISTS????
+    path = pathlib.Path.cwd() / "board" / board
+    
     return
 
-### MAIN EXECUTABLE CODE ###
+### MAIN CODE ###
 
 # Determines whether server was invoked with some input arguments after server.py
 # If not, sets IP and port to default values (same defaults as client.py)
@@ -76,12 +87,18 @@ while True:
     print("Connection made with client:", addr)
     request = pickle.loads(conn.recv(1024))
     if request[0] == "GET_BOARDS":
-        print("Received a GET_BOARDS request") # MAKE SURE TO LOG THIS!!!
+        print("Received a GET_BOARDS request") # MAKE SURE TO LOG THESE!!!
         boardList = pickle.dumps(makeBoardList())
         conn.send(boardList)
         conn.close()
     elif request[0] == "GET_MESSAGES":
-        print(request[1])
+        print("Client requests messages from board "+request[1])
         msgList = pickle.dumps(makeMsgList(request[1]))
         conn.send(msgList)
         conn.close()
+    elif request[0] == "POST_MESSAGE":
+        print("Client wants to post message to board "+request[1])
+        makeMsg(request[1],request[2],request[3])
+        
+        
+        
