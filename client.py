@@ -90,16 +90,9 @@ while True:
         print("\nThese are the last 100 messages in the board " + board + "\n")
         msgList = getMessages(board)
         for i in range(0,len(msgList[0])):
-            print("   " + msgList[1][i]+"\n")
-        
-
-        
-        
-        
-        
-
-        
-        
+            print("Date:",msgList[0][i])
+            print("Title: "+msgList[1][i])
+            print("   " + msgList[2][i]+"\n")
         
         
         
