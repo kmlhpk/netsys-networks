@@ -28,12 +28,11 @@ def getMessages(board):
     if not msgList:
         print("There are no messages in this board, and thus nothing to display.")
     return msgList
-    
+
 def sendMessage(board,date,title,msg):
     filename = date +"-"+ title
     request = ["POST_MESSAGE",board,filename,msg]
     client.send(pickle.dumps(request))
-    print(request)
     return
     
 ### MAIN CODE ###
@@ -60,8 +59,14 @@ else:
 
 # Welcome message
 print("---Welcome to MsgBrd!---\n")
-# Creates a client socket and attempts to connect to server
-client = newSocket()
+try:
+    # Creates a client socket and attempts to connect to server
+    client = newSocket()
+except:
+    # If client cannot connect for some reason, exit client
+    print("Cannot establish connection with server. Exiting client.")
+    sys.exit()
+    
 # Receives list of boards, prints its contents
 boardList = getBoards()
 print("Board list received succesfully. Here is a list of existing message boards:\n")

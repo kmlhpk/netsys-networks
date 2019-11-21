@@ -6,7 +6,7 @@ import datetime
 
 ### FUNCTION DEFINITIONS ###
 
-def writeLog(addr,req,ok): # CHANGE DATE FORMAT, CHECK WHAT'S UP WITH TAB DELIMITING
+def writeLog(addr,req,ok): # CHECK WHAT'S UP WITH TAB DELIMITING
     addr = addr[0] + ":" + str(addr[1])
     date = datetime.datetime.now()
     date = date.strftime("%Y-%m-%d")+"@"+date.strftime("%H:%M:%S")
@@ -89,6 +89,16 @@ else:
     sys.exit()
 
 try:
+    # If no boards exist, server quits
+    if not makeBoardList():
+        print("No message boards have been defined. Exiting server.")
+        sys.exit()
+except:
+    # If the ./board folder doesn't exist, or there's some other error with calling makeBoardList, server quits
+    print("Unable to create board list. Exiting server.")
+    sys.exit()
+
+try:
     server = skt.socket(skt.AF_INET, skt.SOCK_STREAM)
     server.bind((serverHost, serverPort))
     server.listen() # Provide listen() with an integer argument to limit the amount of concurrent connections
@@ -128,5 +138,11 @@ while True:
         makeMsg(request[1],request[2],request[3])
         conn.close()
         writeLog(addr,request[0],True)
+        
+    else:
+        print("Invalid or unrecognised request.")
+        conn.close()
+        writeLog(addr,"UNKNOWN",False)
+        
         
         
