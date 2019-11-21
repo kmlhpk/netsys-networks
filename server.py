@@ -6,6 +6,18 @@ import datetime
 
 ### FUNCTION DEFINITIONS ###
 
+def writeLog(addr,date,req,ok): # CHANGE DATE FORMAT, CHECK WHAT'S UP WITH TAB DELIMITING
+    addr = addr[0] + ":" + str(addr[1])
+    if ok == True:
+        status = "OK"
+    else:
+        status = "Error"
+    log = addr+"\t"+date+"\t"+req+"\t"+status+"\n"
+    path = pathlib.Path.cwd() / "server.log"
+    with open(path,"a") as f:
+        f.write(log)
+    return
+    
 def makeBoardList():
     # Makes a list of paths of all directories in ./board
     path = pathlib.Path.cwd() / "board"
@@ -19,37 +31,37 @@ def makeBoardList():
 def makeMsgList(board):
     # Makes a list of paths of all files in ./board/<specified board>
     path = pathlib.Path.cwd() / "board" / board
-    msgPaths = [m for m in path.iterdir() if m.is_file()] #      SORT THESE BY DATE SOMEHOW! ALSO ONLY 100!!
-    msgList = [[],[],[]] # [[dates][titles][messages]]
+    msgPaths = [m for m in path.iterdir() if m.is_file()]    
+    msgList = []
     for i in range(0,len(msgPaths)):
         try:
-            # Checks is filename is formatted correctly (date-time-title)
+            # Checks if filename is delimited correctly
             fullTitle = msgPaths[i].stem.split("-")
-        except:
-            print("Message title has invalid format. Skipping message.")
-            continue
-        # Pulls message title, sans underscores, from filename
-        title = fullTitle[2].replace("_"," ")
-        try:
-            # Checks for YYYYMMDD-HHMMSS formatting by checking if they're valid integers
+            # Checks if there are >=3 parts to filename by trying to pull out title
+            title = fullTitle[2].replace("_"," ")
+            # Checks for YYYYMMDD-HHMMSS formatting by trying to convert into integers and making a date obj
             dateInt = [int(fullTitle[0][0:4]), int(fullTitle[0][4:6]), int(fullTitle[0][6:])]
             timeInt = [int(fullTitle[1][0:2]), int(fullTitle[1][2:4]), int(fullTitle[1][4:])]
+            date = datetime.datetime(dateInt[0],dateInt[1],dateInt[2],timeInt[0],timeInt[1],timeInt[2])
+            # Appends relevant data to array
+            with open(msgPaths[i],"r") as f:
+                msgList.append([date,title,f.read()])
         except:
             print("Message title has invalid format. Skipping message.")
             continue
-        # Makes a date object from the date+time data for easy displaying
-        date = datetime.datetime(dateInt[0],dateInt[1],dateInt[2],timeInt[0],timeInt[1],timeInt[2])
-        # Appends relevant data to appropriate sub-array
-        msgList[0].append(date)
-        msgList[1].append(title)
-        with open(msgPaths[i],"r") as f:
-            msgList[2].append(f.read())
+    # Makes a key function for sorting the messages by date
+    def takeDate(lst):
+        return lst[0]
+    # Sorts messages by date
+    msgList.sort(key=takeDate)
+    # Limits to 100 messages
+    msgList = msgList[:100]
     return msgList
 
 def makeMsg(board,filename,msg):
-    # WHAT HAPPENS IF FILENAME ALREADY EXISTS????
-    path = pathlib.Path.cwd() / "board" / board
-    
+    path = pathlib.Path.cwd() / "board" / board / filename
+    with open(path,"w") as f:
+        f.write(msg)
     return
 
 ### MAIN CODE ###
@@ -73,32 +85,35 @@ else:
     print("    python server.py serverHost serverPort")
     print("Where serverHost is the IP or host you want to listen on (string or integer), and severPort is a port number (integer)")
     sys.exit()
-    
 
 server = skt.socket(skt.AF_INET, skt.SOCK_STREAM)
 server.bind((serverHost, serverPort))
 server.listen() # Provide listen() with an integer argument to limit the amount of concurrent connections
 print("The server is listening for client connections on host:", serverHost, "port:", serverPort)
 
-# IF CLIENT CRASHES/QUITS, MAKE SURE TO CLOSE CONNECTION! OTHERWISE GET_BOARDS FROM NEW CLIENT GETS AN EOF ERROR
-
 while True:
     conn, addr = server.accept()
     print("Connection made with client:", addr)
+    
     request = pickle.loads(conn.recv(1024))
     if request[0] == "GET_BOARDS":
         print("Received a GET_BOARDS request") # MAKE SURE TO LOG THESE!!!
         boardList = pickle.dumps(makeBoardList())
         conn.send(boardList)
         conn.close()
+        writeLog(addr,str(datetime.datetime.now()),request[0],True)
+        
     elif request[0] == "GET_MESSAGES":
         print("Client requests messages from board "+request[1])
         msgList = pickle.dumps(makeMsgList(request[1]))
         conn.send(msgList)
         conn.close()
+        writeLog(addr,str(datetime.datetime.now()),request[0],True)
+        
     elif request[0] == "POST_MESSAGE":
         print("Client wants to post message to board "+request[1])
         makeMsg(request[1],request[2],request[3])
-        
+        conn.close()
+        writeLog(addr,str(datetime.datetime.now()),request[0],True)
         
         

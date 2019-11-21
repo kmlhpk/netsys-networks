@@ -25,13 +25,14 @@ def getMessages(board):
     request = ["GET_MESSAGES",board]
     client.send(pickle.dumps(request))
     msgList = pickle.loads(client.recv(1024))
-    if not msgList[0]:
+    if not msgList:
         print("There are no messages in this board, and thus nothing to display.")
     return msgList
     
 def sendMessage(board,date,title,msg):
     filename = date +"-"+ title
     request = ["POST_MESSAGE",board,filename,msg]
+    client.send(pickle.dumps(request))
     print(request)
     return
     
@@ -79,6 +80,7 @@ while True:
         sys.exit()
     
     elif command == "POST":
+        client = newSocket()
         boardInt = input("Enter a number between 1 and "+str(len(boardList))+" to select a board to post your message to.\n")
         try:
             board = boardList[int(boardInt)-1]
@@ -94,12 +96,12 @@ while True:
         client = newSocket()
         board = boardList[int(command)-1]
         msgList = getMessages(board)
-        if msgList[0]:
-            print("\nThese are the last 100 messages in the board " + board + "\n")
-            for i in range(0,len(msgList[0])):
-                print("Date:",msgList[0][i])
-                print("Title: "+msgList[1][i])
-                print("   " + msgList[2][i]+"\n")
+        if msgList:
+            print("\nThese are the last",len(msgList),"messages in the board " + board + "\n")
+            for i in range(0,len(msgList)):
+                print("Date:",msgList[i][0])
+                print("Title: "+msgList[i][1])
+                print("   " + msgList[i][2]+"\n")
         
         
         
