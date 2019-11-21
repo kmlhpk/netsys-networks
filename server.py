@@ -6,8 +6,10 @@ import datetime
 
 ### FUNCTION DEFINITIONS ###
 
-def writeLog(addr,date,req,ok): # CHANGE DATE FORMAT, CHECK WHAT'S UP WITH TAB DELIMITING
+def writeLog(addr,req,ok): # CHANGE DATE FORMAT, CHECK WHAT'S UP WITH TAB DELIMITING
     addr = addr[0] + ":" + str(addr[1])
+    date = datetime.datetime.now()
+    date = date.strftime("%Y-%m-%d")+"@"+date.strftime("%H:%M:%S")
     if ok == True:
         status = "OK"
     else:
@@ -17,7 +19,7 @@ def writeLog(addr,date,req,ok): # CHANGE DATE FORMAT, CHECK WHAT'S UP WITH TAB D
     with open(path,"a") as f:
         f.write(log)
     return
-    
+
 def makeBoardList():
     # Makes a list of paths of all directories in ./board
     path = pathlib.Path.cwd() / "board"
@@ -86,11 +88,15 @@ else:
     print("Where serverHost is the IP or host you want to listen on (string or integer), and severPort is a port number (integer)")
     sys.exit()
 
-server = skt.socket(skt.AF_INET, skt.SOCK_STREAM)
-server.bind((serverHost, serverPort))
-server.listen() # Provide listen() with an integer argument to limit the amount of concurrent connections
-print("The server is listening for client connections on host:", serverHost, "port:", serverPort)
-
+try:
+    server = skt.socket(skt.AF_INET, skt.SOCK_STREAM)
+    server.bind((serverHost, serverPort))
+    server.listen() # Provide listen() with an integer argument to limit the amount of concurrent connections
+    print("The server is listening for client connections on host:", serverHost, "port:", serverPort)
+except:
+    print("The IP or Port are invalid, unavailable or busy. Exiting server.")
+    sys.exit()
+    
 while True:
     conn, addr = server.accept()
     print("Connection made with client:", addr)
@@ -99,21 +105,28 @@ while True:
     if request[0] == "GET_BOARDS":
         print("Received a GET_BOARDS request") # MAKE SURE TO LOG THESE!!!
         boardList = pickle.dumps(makeBoardList())
-        conn.send(boardList)
-        conn.close()
-        writeLog(addr,str(datetime.datetime.now()),request[0],True)
+        if not boardList:
+            print("No message boards have been defined. Exiting server.")
+            conn.send(boardList) # An empty boardList is treated as an error in the client
+            conn.close()
+            writeLog(addr,request[0],False)
+            sys.exit()
+        else:
+            conn.send(boardList)
+            conn.close()
+            writeLog(addr,request[0],True)
         
     elif request[0] == "GET_MESSAGES":
         print("Client requests messages from board "+request[1])
         msgList = pickle.dumps(makeMsgList(request[1]))
         conn.send(msgList)
         conn.close()
-        writeLog(addr,str(datetime.datetime.now()),request[0],True)
+        writeLog(addr,request[0],True)
         
     elif request[0] == "POST_MESSAGE":
         print("Client wants to post message to board "+request[1])
         makeMsg(request[1],request[2],request[3])
         conn.close()
-        writeLog(addr,str(datetime.datetime.now()),request[0],True)
+        writeLog(addr,request[0],True)
         
         

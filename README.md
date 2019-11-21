@@ -3,8 +3,9 @@ NetSys 19/20 Networks Summative
 
 ## TODO
 
-Check if message title error handling works
+check for boards on server startup - if none, shit yourself
 
-Implement Multithreading
+Log unknown error
+Make sure server logs things even if it shits itself in the middle of doing them
 
-Implement lots more error-checking and try-catching
+Implement Multi-threading?
