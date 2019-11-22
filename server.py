@@ -21,7 +21,7 @@ def writeLog(addr,req,ok): # CHECK WHAT'S UP WITH TAB DELIMITING
     return
 
 def makeBoardList():
-    # Makes a list of paths of all directories in ./board
+    # Makes a list of paths of directories in ./board
     path = pathlib.Path.cwd() / "board"
     boardPaths = [b for b in path.iterdir() if b.is_dir()]
     boardList = []
@@ -31,7 +31,7 @@ def makeBoardList():
     return boardList
 
 def makeMsgList(board):
-    # Makes a list of paths of all files in ./board/<specified board>
+    # Makes a list of paths of files in ./board/<specified board>
     path = pathlib.Path.cwd() / "board" / board
     msgPaths = [m for m in path.iterdir() if m.is_file()]    
     msgList = []
@@ -112,12 +112,18 @@ while True:
     print("Connection made with client:", addr)
     
     request = pickle.loads(conn.recv(1024))
+    
+    # Checks if request is in a list-like data structure
+    '''if not isinstance(request,list) or not isinstance(request,tuple):
+        print("Server expected an array/list/tuple, but did not receive it - closing connection.")
+        conn.close()'''
+    
     if request[0] == "GET_BOARDS":
-        print("Received a GET_BOARDS request") # MAKE SURE TO LOG THESE!!!
+        print("Received a GET_BOARDS request")
         boardList = pickle.dumps(makeBoardList())
         if not boardList:
             print("No message boards have been defined. Exiting server.")
-            conn.send(boardList) # An empty boardList is treated as an error in the client
+            conn.send(boardList) # An empty boardList is treated as an "error" in the client
             conn.close()
             writeLog(addr,request[0],False)
             sys.exit()
@@ -127,18 +133,30 @@ while True:
             writeLog(addr,request[0],True)
         
     elif request[0] == "GET_MESSAGES":
-        print("Client requests messages from board "+request[1])
-        msgList = pickle.dumps(makeMsgList(request[1]))
-        conn.send(msgList)
-        conn.close()
-        writeLog(addr,request[0],True)
+        try:
+            print("Client requests messages from board "+request[1])
+            msgList = pickle.dumps(makeMsgList(request[1]))
+            conn.send(msgList)
+            conn.close()
+            writeLog(addr,request[0],True)
+        except:
+            print("Failed to acquire messages - either the board doesn't exist, or another error has occured.")
+            conn.send(pickle.dumps("Error"))
+            writeLog(addr,request[0],False)
         
     elif request[0] == "POST_MESSAGE":
-        print("Client wants to post message to board "+request[1])
-        makeMsg(request[1],request[2],request[3])
-        conn.close()
-        writeLog(addr,request[0],True)
-        
+        try:
+            print("Client wants to post message to board "+request[1])
+            makeMsg(request[1],request[2],request[3])
+            conn.send(pickle.dumps("OK"))
+            conn.close()
+            writeLog(addr,request[0],True)
+        except:
+            print("Request came with too few arguments, or another error has occured.")
+            conn.send(pickle.dumps("Error"))            
+            conn.close()
+            writeLog(addr,request[0],False)
+
     else:
         print("Invalid or unrecognised request.")
         conn.close()

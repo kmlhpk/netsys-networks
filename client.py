@@ -8,7 +8,6 @@ import datetime
 def newSocket():
     client = skt.socket(skt.AF_INET, skt.SOCK_STREAM)
     client.connect((serverHost, serverPort))
-    print("Connection to host:", serverHost, "port:", serverPort, "succesful!") # MAY WANT TO GET RID OF THIS EVENTUALLY
     return client
 
 def getBoards():
@@ -21,19 +20,42 @@ def getBoards():
     else:
         return boardList
 
-def getMessages(board):
+def getMessages(boardNum):
+    board = boardList[int(boardNum)-1]
     request = ["GET_MESSAGES",board]
     client.send(pickle.dumps(request))
     msgList = pickle.loads(client.recv(1024))
     if not msgList:
-        print("There are no messages in this board, and thus nothing to display.")
-    return msgList
+        print("\nThere are no messages in this board, and thus nothing to display.")
+    elif msgList == "Error":
+        print("\nThere has been an error in retrieving messages. Awaiting further input.")
+    else:
+        print("\nThese are the last",len(msgList),"message(s) in the board " + board + "\n")
+        for i in range(0,len(msgList)):
+            print("Date:",msgList[i][0])
+            print("Title: "+msgList[i][1])
+            print("   " + msgList[i][2]+"\n")
+    return
 
-def sendMessage(board,date,title,msg):
+def sendMessage():
+    boardInt = input("Enter a number between 1 and "+str(len(boardList))+" to select a board to post your message to.\n")
+    try:
+        board = boardList[int(boardInt)-1]
+        title = input("Give your message a title.\n").replace(" ","_")
+        msg = input("Write your message.\n")
+        date = datetime.datetime.now()
+        date = date.strftime("%Y%m%d")+"-"+date.strftime("%H%M%S")
+    except:
+        print("Invalid board number - please try again.")
+        return
     filename = date +"-"+ title
     request = ["POST_MESSAGE",board,filename,msg]
     client.send(pickle.dumps(request))
-    return
+    result = pickle.loads(client.recv(1024))
+    if result == "OK":
+        print("Message posted successfully.")
+    else:
+        print("There was a problem posting your message - perhaps you used inappropriate characters in your title?")
     
 ### MAIN CODE ###
 
@@ -63,7 +85,7 @@ try:
     # Creates a client socket and attempts to connect to server
     client = newSocket()
 except:
-    # If client cannot connect for some reason, exit client
+    # If client cannot connect to server for some reason, exit client
     print("Cannot establish connection with server. Exiting client.")
     sys.exit()
     
@@ -86,27 +108,14 @@ while True:
     
     elif command == "POST":
         client = newSocket()
-        boardInt = input("Enter a number between 1 and "+str(len(boardList))+" to select a board to post your message to.\n")
+        sendMessage()
+
+    else:
         try:
-            board = boardList[int(boardInt)-1]
-            title = input("Give your message a title.\n").replace(" ","_")
-            msg = input("Write your message.\n")
-            date = datetime.datetime.now()
-            date = date.strftime("%Y%m%d")+"-"+date.strftime("%H%M%S")
-            sendMessage(board,date,title,msg)
+            if int(command) in range(1,len(boardList)+1):
+                client = newSocket()
+                getMessages(command)
+            else:
+                print("Please enter a valid number.")
         except:
-            print("Invalid board number - please try again.")
-    
-    elif int(command) in range(1,len(boardList)+1): # TRYCATCH INTEGERS
-        client = newSocket()
-        board = boardList[int(command)-1]
-        msgList = getMessages(board)
-        if msgList:
-            print("\nThese are the last",len(msgList),"messages in the board " + board + "\n")
-            for i in range(0,len(msgList)):
-                print("Date:",msgList[i][0])
-                print("Title: "+msgList[i][1])
-                print("   " + msgList[i][2]+"\n")
-        
-        
-        
+            print("Please enter a valid command.")
