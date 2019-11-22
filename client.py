@@ -23,6 +23,7 @@ def getBoards():
 def getMessages(boardNum):
     board = boardList[int(boardNum)-1]
     request = ["GET_MESSAGES",board]
+    client = newSocket()
     client.send(pickle.dumps(request))
     msgList = pickle.loads(client.recv(1024))
     if not msgList:
@@ -50,6 +51,7 @@ def sendMessage():
         return
     filename = date +"-"+ title
     request = ["POST_MESSAGE",board,filename,msg]
+    client = newSocket()
     client.send(pickle.dumps(request))
     result = pickle.loads(client.recv(1024))
     if result == "OK":
@@ -107,13 +109,11 @@ while True:
         sys.exit()
     
     elif command == "POST":
-        client = newSocket()
         sendMessage()
 
     else:
         try:
             if int(command) in range(1,len(boardList)+1):
-                client = newSocket()
                 getMessages(command)
             else:
                 print("Please enter a valid number.")

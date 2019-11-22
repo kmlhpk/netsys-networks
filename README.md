@@ -3,11 +3,9 @@ NetSys 19/20 Networks Summative
 
 ## TODO
 
-Make sure server logs things even if it shits itself in the middle of doing them
+Trycatch all the sends and gets
 
 Implement 10-second wait timer
-
-Implement Multi-threading?
 
 TEST TEST TEST! Especially other OSs
 
