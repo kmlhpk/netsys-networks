@@ -7,6 +7,7 @@ import datetime
 
 def newSocket():
     client = skt.socket(skt.AF_INET, skt.SOCK_STREAM)
+    client.settimeout(10)
     client.connect((serverHost, serverPort))
     return client
 
@@ -109,12 +110,20 @@ while True:
         sys.exit()
     
     elif command == "POST":
-        sendMessage()
+        try:
+            sendMessage()
+        except:
+            print("The server took too long to respond, or there was another error. Exiting client.")
+            sys.exit()
 
     else:
         try:
             if int(command) in range(1,len(boardList)+1):
-                getMessages(command)
+                try:
+                    getMessages(command)
+                except:
+                    print("The server took too long to respond, or there was another error. Exiting client.")
+                    sys.exit()
             else:
                 print("Please enter a valid number.")
         except:
