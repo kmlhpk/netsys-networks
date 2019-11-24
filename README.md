@@ -5,7 +5,7 @@ NetSys 19/20 Networks Summative
 
 Trycatch all the sends and gets
 
-Implement 10-second wait timer
+Test 10-second wait timer (sleep timers in server?)
 
 TEST TEST TEST! Especially other OSs
 
