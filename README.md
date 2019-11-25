@@ -5,9 +5,12 @@ NetSys 19/20 Networks Summative
 
 Trycatch all the sends and gets
 
-Test 10-second wait timer (sleep timers in server?)
 
 TEST TEST TEST! Especially other OSs
+
+Test if you can invoke ip and port properly
+
+Test busy port error catching
 
 Clean up comments
 

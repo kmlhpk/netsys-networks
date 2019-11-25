@@ -34,9 +34,9 @@ def getMessages(boardNum):
     else:
         print("\nThese are the last",len(msgList),"message(s) in the board " + board + "\n")
         for i in range(0,len(msgList)):
-            print("Date:",msgList[i][0])
+            print("Date: ",msgList[i][0])
             print("Title: "+msgList[i][1])
-            print("   " + msgList[i][2]+"\n")
+            print("Body:  " + msgList[i][2]+"\n")
     return
 
 def sendMessage():
@@ -112,19 +112,19 @@ while True:
     elif command == "POST":
         try:
             sendMessage()
-        except:
+        except Exception:
             print("The server took too long to respond, or there was another error. Exiting client.")
-            sys.exit()
+            sys.exit(1)
 
     else:
         try:
             if int(command) in range(1,len(boardList)+1):
                 try:
                     getMessages(command)
-                except:
+                except Exception: 
                     print("The server took too long to respond, or there was another error. Exiting client.")
-                    sys.exit()
+                    sys.exit(1)
             else:
-                print("Please enter a valid number.")
-        except:
-            print("Please enter a valid command.")
+                print("\nPlease enter a valid number.")
+        except Exception:
+            print("\nPlease enter a valid command.")
