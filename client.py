@@ -93,11 +93,15 @@ except:
     sys.exit()
     
 # Receives list of boards, prints its contents
-boardList = getBoards()
-print("Board list received succesfully. Here is a list of existing message boards:\n")
-for i in range(0,len(boardList)):
-    print (" ",i+1,":",boardList[i])
-        
+try:
+    boardList = getBoards()
+    print("Board list received succesfully. Here is a list of existing message boards:\n")
+    for i in range(0,len(boardList)):
+        print (" ",i+1,":",boardList[i])
+except Exception:
+    print("The server took too long to respond, or there was another error. Exiting client.")
+    sys.exit(1)
+
 while True:
     print("\nPlease select an option:")
     print(" -Enter a number between 1 and "+str(len(boardList))+" to view the corresponding board's 100 most recent messages.")
