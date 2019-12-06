@@ -23,6 +23,8 @@ def writeLog(addr,req,ok):
     # Concatenates info into single string, with tab delimiting
     log = addr+"\t"+date+"\t"+req+"\t"+status+"\n"
     path = pathlib.Path.cwd() / "server.log"
+    print(type(path))
+    print(path)
     # Attempts to append log to server.log
     try:
         with open(path,"a") as f:
@@ -44,7 +46,8 @@ def makeBoardList():
 def makeMsgList(board):
     # Makes a list of paths of files in ./board/<specified board>
     path = pathlib.Path.cwd() / "board" / board
-    msgPaths = [m for m in path.iterdir() if m.is_file()]    
+    msgPaths = [m for m in path.iterdir() if m.is_file()]
+    print(msgPaths)
     msgList = []
     for i in range(0,len(msgPaths)):
         try:
