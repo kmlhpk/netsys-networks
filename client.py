@@ -17,8 +17,15 @@ def newSocket():
 def getBoards():
     # Requests a board list from the server
     request = ["GET_BOARDS"]
-    client.send(pickle.dumps(request))
-    boardList = pickle.loads(client.recv(2048))
+    client.sendall(pickle.dumps(request))
+    # Deals with large incoming data by forming data first, then unpickling    
+    data = b""
+    while True:
+        packet = client.recv(4096)
+        if not packet:
+            break
+        data += packet
+    boardList = pickle.loads(data)
     if not boardList: # ie. If the board list is empty
         print("There are no message boards, and thus nothing to display or do. Exiting client.")
         sys.exit()
@@ -33,8 +40,15 @@ def getMessages(boardNum):
     board = boardList[int(boardNum)-1]
     request = ["GET_MESSAGES",board]
     client = newSocket()
-    client.send(pickle.dumps(request))
-    msgList = pickle.loads(client.recv(2048))
+    client.sendall(pickle.dumps(request))
+    # Deals with large incoming data by forming data first, then unpickling
+    data = b""
+    while True:
+        packet = client.recv(4096)
+        if not packet:
+            break
+        data += packet
+    msgList = pickle.loads(data)
     if not msgList: # ie. If there are no messages in that board
         print("\nThere are no messages in this board, and thus nothing to display.")
     elif msgList == "Error":
@@ -66,8 +80,8 @@ def sendMessage():
     request = ["POST_MESSAGE",board,filename,msg]
     # Attempts to post message to specified board
     client = newSocket()
-    client.send(pickle.dumps(request))
-    result = pickle.loads(client.recv(2048))
+    client.sendall(pickle.dumps(request))
+    result = pickle.loads(client.recv(4096))
     if result == "OK":
         print("Message posted successfully.")
     else:
@@ -139,7 +153,7 @@ while True:
             if int(command) in range(1,len(boardList)+1):
                 try:
                     getMessages(command)
-                except Exception: 
+                except Exception:
                     print("The server took too long to respond, or there was another error. Exiting client.")
                     sys.exit(1)
             else:
