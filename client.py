@@ -86,7 +86,7 @@ if len(sys.argv) == 1:
 # If two arguments were provided, sets serverHost to the first arg and serverPort to the second arg
 elif len(sys.argv) == 3 and sys.argv[2].isdigit():
     serverHost = sys.argv[1]
-    serverPort = sys.argv[2]
+    serverPort = int(sys.argv[2])
     print("Using host:", serverHost, "port:", serverPort,"\n")
 # If only one, or three or more, input arguments were provided, returns an error message.
 else:
