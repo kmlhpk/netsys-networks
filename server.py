@@ -4,20 +4,31 @@ import pathlib
 import pickle
 import datetime
 
+############################
 ### FUNCTION DEFINITIONS ###
+############################
 
-def writeLog(addr,req,ok): # CHECK WHAT'S UP WITH TAB DELIMITING
+def writeLog(addr,req,ok):
+    # Makes message consisting of...
+    # ...client connection socket's details
     addr = addr[0] + ":" + str(addr[1])
+    # ...date and time of request
     date = datetime.datetime.now()
     date = date.strftime("%Y-%m-%d")+"@"+date.strftime("%H:%M:%S")
+    # ...and result of request
     if ok == True:
         status = "OK"
     else:
         status = "Error"
+    # Concatenates info into single string, with tab delimiting
     log = addr+"\t"+date+"\t"+req+"\t"+status+"\n"
     path = pathlib.Path.cwd() / "server.log"
-    with open(path,"a") as f:
-        f.write(log)
+    # Attempts to append log to server.log
+    try:
+        with open(path,"a") as f:
+            f.write(log)
+    except:
+        print("There was an error attempting to write a log.")
     return
 
 def makeBoardList():
@@ -61,12 +72,15 @@ def makeMsgList(board):
     return msgList
 
 def makeMsg(board,filename,msg):
+    # Creates a file with appropriate name and content, and places in correct position, based on arguments
     path = pathlib.Path.cwd() / "board" / board / filename
     with open(path,"w") as f:
         f.write(msg)
     return
 
+#################
 ### MAIN CODE ###
+#################
 
 # Determines whether server was invoked with some input arguments after server.py
 # If not, sets IP and port to default values (same defaults as client.py)
@@ -75,11 +89,11 @@ if len(sys.argv) == 1:
     serverPort = 12000
     print("Using default host:", serverHost, "default port:", serverPort,"\n")
 # If two arguments were provided, sets serverHost to the first arg and serverPort to the second arg
-elif len(sys.argv) == 3 and type(sys.argv[2]) is int:
+elif len(sys.argv) == 3 and sys.argv[2].isdigit():
     serverHost = sys.argv[1]
-    serverPort = sys.argv[2]
+    serverPort = int(sys.argv[2])
     print("Using host:", serverHost, "port:", serverPort,"\n")
-# If only one, or three or more, input arguments were provided, returns an error message.
+# If only one, or three or more, or invalid input arguments were provided, returns an error message.
 else:
     print("ERROR: You have provided an incorrect amount of arguments, or used the wrong type of argument.")
     print("Please invoke the server in one of the following formats:")
@@ -98,6 +112,7 @@ except:
     print("Unable to create board list. Exiting server.")
     sys.exit()
 
+# Attempts to bind server to socket with provided host and port
 try:
     server = skt.socket(skt.AF_INET, skt.SOCK_STREAM)
     server.bind((serverHost, serverPort))
@@ -106,32 +121,47 @@ try:
 except:
     print("The IP or Port are invalid, unavailable or busy. Exiting server.")
     sys.exit()
-    
+
+# Constantly waits for connections with client
 while True:
     conn, addr = server.accept()
     print("Connection made with client:", addr)
-    
-    request = pickle.loads(conn.recv(1024))
+    try:
+        request = pickle.loads(conn.recv(2048))
+    except:
+        print("Error receiving request - either it's too long, or something else went wrong.")
+        conn.close
+        continue
     
     # Checks if request is in a list-like data structure
-    '''if not isinstance(request,list) or not isinstance(request,tuple):
-        print("Server expected an array/list/tuple, but did not receive it - closing connection.")
-        conn.close()'''
+    if isinstance(request,list) or isinstance(request,tuple):
+        pass
+    else:
+        print("Server expected a request of type list or tuple, but did not receive it - closing connection.")
+        conn.close()
+        continue
     
+    # Interprets request and tries to execute it
     if request[0] == "GET_BOARDS":
-        print("Received a GET_BOARDS request")
-        boardList = pickle.dumps(makeBoardList())
-        if not boardList:
-            print("No message boards have been defined. Exiting server.")
-            conn.send(boardList) # An empty boardList is treated as an "error" in the client
-            conn.close()
+        print("Client requests a list of boards")
+        try:
+            boardList = makeBoardList()
+            if not boardList:
+                print("No message boards have been defined. Exiting server.")
+                conn.send(pickle.dumps(boardList)) # NB: An empty boardList is treated as an exit condition by the client
+                conn.close()
+                writeLog(addr,request[0],True)
+                sys.exit(1)
+            else:
+                conn.send(pickle.dumps(boardList))
+                conn.close()
+                writeLog(addr,request[0],True)
+        except Exception:
+            print("Failed to acquire boards.")
             writeLog(addr,request[0],False)
-            sys.exit()
-        else:
-            conn.send(boardList)
+            conn.send(pickle.dumps("Error"))
             conn.close()
-            writeLog(addr,request[0],True)
-        
+            
     elif request[0] == "GET_MESSAGES":
         try:
             print("Client requests messages from board "+request[1])
@@ -141,23 +171,23 @@ while True:
             writeLog(addr,request[0],True)
         except:
             print("Failed to acquire messages - either the board doesn't exist, or another error has occured.")
-            conn.send(pickle.dumps("Error"))
             writeLog(addr,request[0],False)
-        
+            conn.send(pickle.dumps("Error"))
+            conn.close()
     elif request[0] == "POST_MESSAGE":
         try:
             print("Client wants to post message to board "+request[1])
             makeMsg(request[1],request[2],request[3])
+            writeLog(addr,request[0],True)
             conn.send(pickle.dumps("OK"))
             conn.close()
-            writeLog(addr,request[0],True)
         except:
             print("Request came with too few arguments, or another error has occured.")
+            writeLog(addr,request[0],False)
             conn.send(pickle.dumps("Error"))            
             conn.close()
-            writeLog(addr,request[0],False)
-
     else:
+        # If the request is not recognised, closes socket
         print("Invalid or unrecognised request.")
         conn.close()
         writeLog(addr,"UNKNOWN",False)
