@@ -1,6 +1,4 @@
-# NetSysNet
+# netsys-networks
 NetSys 19/20 Networks Summative
 
-## TODO
-
-PYLINT
+Possibly the coursework I am most proud of - it got me a 100% mark!
